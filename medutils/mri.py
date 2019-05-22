@@ -65,7 +65,7 @@ def mriAdjointOp(kspace, smaps, mask):
     assert kspace.ndim == 3
     assert smaps.ndim == 3
     assert mask.ndim == 2
-    return np.sum(ifft2c(kspace * mask)*np.conj(smaps), axis=0)
+    return np.sum(ifft2c(kspace * mask, axes=(1,2))*np.conj(smaps), axis=0)
 
 def mriForwardOp(img, smaps, mask):
     """ Compute Cartesian MRI forward operation (2D)
@@ -77,7 +77,7 @@ def mriForwardOp(img, smaps, mask):
     assert img.ndim == 2
     assert smaps.ndim == 3
     assert mask.ndim == 2
-    return fft2c(smaps * img)*mask
+    return fft2c(smaps * img, axes=(1,2))*mask
 
 def mriAdjointOpNoShift(kspace, smaps, mask):
     """ Compute Cartesian MRI adjoint operation (2D) without (i)fftshifts
@@ -89,7 +89,7 @@ def mriAdjointOpNoShift(kspace, smaps, mask):
     assert kspace.ndim == 3
     assert smaps.ndim == 3
     assert mask.ndim == 2
-    return np.sum(ifft2(kspace * mask)*np.conj(smaps), axis=0)
+    return np.sum(ifft2(kspace * mask, axes=(1,2))*np.conj(smaps), axis=0)
 
 def mriForwardOpNoShift(img, smaps, mask):
     """ Compute Cartesian MRI forward operation (2D) without (i)fftshifts
@@ -101,8 +101,8 @@ def mriForwardOpNoShift(img, smaps, mask):
     assert img.ndim == 2
     assert smaps.ndim == 3
     assert mask.ndim == 2
-    return fft2(smaps * img)*mask
-
+    return fft2(smaps * img, axes=(1,2))*mask
+    
 def estimateIntensityNormalization(img):
     """ Estimate intensity normalization based on the maximum values in the image.
     :param img: input image (np.array)
