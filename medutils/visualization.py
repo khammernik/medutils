@@ -144,7 +144,14 @@ def show(volume, vmin=None, vmax=None, title="slice", logscale=False, logoffset=
             ax.images[0].set_cmap('gray')
         elif event.key == 'v':
             ax.images[0].set_cmap('viridis')
-            
+        elif event.key == 'up' or event.key == 'down':
+            event_step = 1 if event.key == 'up' else -1
+            event_fig = event.canvas.figure
+            ax.idx = np.minimum(max_slices, np.maximum(0, ax.idx-int(event_step)))
+            ax.images[0].set_array(volume[ax.idx])
+            ax.set_title(title + f" {ax.idx}")
+            event_fig.canvas.draw()
+                        
     fig.canvas.mpl_connect('scroll_event', onScroll)
     fig.canvas.mpl_connect('motion_notify_event', onMouseMotion)
     fig.canvas.mpl_connect('key_press_event', onKeyPress)
