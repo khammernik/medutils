@@ -77,54 +77,64 @@ def ifft2(img, axes=(-2, -1)):
 
     return np.fft.ifft2(img, axes=axes) * np.sqrt(img.shape[axes[0]]*img.shape[axes[1]])
 
-def mriAdjointOp(kspace, smaps, mask):
+def mriAdjointOp(kspace, smaps, mask, fft_axes=(-2,-1), coil_axis=-3):
     """ Compute Cartesian MRI adjoint operation (2D)
-    :param kspace: input kspace (np.array, [nCh, nFE, nPE])
-    :param smaps: precomputed sensitivity maps (np.array, [nCh, nFE, nPE])
+    :param kspace: input kspace (np.array)
+    :param smaps: precomputed sensitivity maps (np.array)
     :param mask: undersampling mask
-    :return: reconstructed image (np.array, [nFE, nPE])
+    :param fft_axes: axes over which 2D fft is performed
+    :param coil_axis: defines the axis of the coils (and extended coil sensitivity maps if softSENSE is used)
+    :return: reconstructed image (np.array)
     """
-    assert kspace.ndim == 3
-    assert smaps.ndim == 3
-    assert mask.ndim == 2
-    return np.sum(ifft2c(kspace * mask, axes=(1,2))*np.conj(smaps), axis=0)
+    assert kspace.ndim >= 3
+    assert kspace.ndim == smaps.ndim
+    assert kspace.ndim == mask.ndim or mask.ndim == 2
 
-def mriForwardOp(img, smaps, mask):
+    return np.sum(ifft2c(kspace * mask, axes=fft_axes)*np.conj(smaps), axis=coil_axis)
+
+def mriForwardOp(img, smaps, mask, fft_axes=(-2,-1), soft_sense_dim=None):
     """ Compute Cartesian MRI forward operation (2D)
-    :param img: input image (np.array, [nFE, nPE])
-    :param smaps: precomputed sensitivity maps (np.array, [nCh, nFE, nPE])
+    :param img: input image (np.array)
+    :param smaps: precomputed sensitivity maps (np.array)
     :param mask: undersampling mask
-    :return: kspace (np.array, [nCh, nFE, nPE])
+    :param fft_axes: axes over which 2D fft is performed
+    :param soft_sense_dim: defines the dimension of the extended coil sensitivity maps for softSENSE
+    :return: kspace (np.array)
     """
-    assert img.ndim == 2
-    assert smaps.ndim == 3
-    assert mask.ndim == 2
-    return fft2c(smaps * img, axes=(1,2))*mask
+    assert img.ndim <= smaps.ndim
+    kspace = fft2c(smaps * img, axes=fft_axes)*mask
+    if soft_sense_dim != None:
+        return np.sum(kspace, axis=soft_sense_dim)
 
-def mriAdjointOpNoShift(kspace, smaps, mask):
+def mriAdjointOpNoShift(kspace, smaps, mask, fft_axes=(-2,-1), coil_axis=-3):
     """ Compute Cartesian MRI adjoint operation (2D) without (i)fftshifts
-    :param kspace: input kspace (pre-shifted) (np.array, [nCh, nFE, nPE])
-    :param smaps: precomputed sensitivity maps (np.array, [nCh, nFE, nPE])
+    :param kspace: input kspace (pre-shifted) (np.array)
+    :param smaps: precomputed sensitivity maps (np.array)
     :param mask: undersampling mask (pre-shifted)
-    :return: reconstructed image (np.array, [nFE, nPE])
+    :param fft_axes: axes over which 2D fft is performed
+    :param coil_axis: defines the axis of the coils (and extended coil sensitivity maps if softSENSE is used)
+    :return: reconstructed image (np.array)
     """
-    assert kspace.ndim == 3
-    assert smaps.ndim == 3
-    assert mask.ndim == 2
-    return np.sum(ifft2(kspace * mask, axes=(1,2))*np.conj(smaps), axis=0)
+    assert kspace.ndim >= 3
+    assert kspace.ndim == smaps.ndim
+    assert kspace.ndim == mask.ndim or mask.ndim == 2
 
-def mriForwardOpNoShift(img, smaps, mask):
+    return np.sum(ifft2(kspace * mask, axes=fft_axes)*np.conj(smaps), axis=coil_axis)
+
+def mriForwardOpNoShift(img, smaps, mask, fft_axes=(-2,-1), soft_sense_dim=None):
     """ Compute Cartesian MRI forward operation (2D) without (i)fftshifts
-    :param img: input image (np.array, [nFE, nPE])
-    :param smaps: precomputed sensitivity maps (np.array, [nCh, nFE, nPE])
+    :param img: input image (np.array)
+    :param smaps: precomputed sensitivity maps (np.array)
     :param mask: undersampling mask (pre-shifted)
-    :return: kspace (np.array, [nCh, nFE, nPE])
+    :param fft_axes: axes over which 2D fft is performed
+    :param soft_sense_dim: defines the dimension of the extended coil sensitivity maps for softSENSE
+    :return: kspace (np.array)
     """
-    assert img.ndim == 2
-    assert smaps.ndim == 3
-    assert mask.ndim == 2
-    return fft2(smaps * img, axes=(1,2))*mask
-    
+    assert img.ndim <= smaps.ndim
+    kspace = fft2(smaps * img, axes=fft_axes)*mask
+    if soft_sense_dim != None:
+        return np.sum(kspace, axis=soft_sense_dim)
+
 def estimateIntensityNormalization(img):
     """ Estimate intensity normalization based on the maximum values in the image.
     :param img: input image (np.array)
