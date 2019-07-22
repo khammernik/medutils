@@ -9,7 +9,7 @@ https://www.tugraz.at/institute/icg/research/team-pock/
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.signal
-import scipy.misc
+import imageio
 import os
 
 def kshow(kspace, title="", offset=1e-4):
@@ -72,7 +72,7 @@ def imsave(img, filepath, normalize_img=True):
 
     if normalize_img:
         img  = normalize(img)
-    scipy.misc.imsave(filepath, img.astype(np.uint8))
+    imageio.imwrite(filepath, img.astype(np.uint8))
 
 def show(volume, vmin=None, vmax=None, title="slice", logscale=False, logoffset=1e-4, transpose=None):
     """ Interactive volume displayer.
