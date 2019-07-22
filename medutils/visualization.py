@@ -267,27 +267,27 @@ def getContrastStretchingLimits(img, saturated_pixel=0.004):
     vmax = values[-lim-1]
     return vmin, vmax
 
-def flip(img, axes=(0,1)):
-    """ Flip image upside-down and left-right along specified axes
-    :param img: input image (np.array)
-    :param axes: tuple of axes over which the flipping is executed
-    :return: flipped image
-    """
-    assert len(axes) == 2
+def flip(img, axes=(-2, -1), ud=True, lr=True):
+    assert len(axes)==2
+    axes = list(axes)
+    full_axes = list(range(0, img.ndim))
+    axes[0] = full_axes[axes[0]]
+    axes[1] = full_axes[axes[1]]
+
     if img.ndim == 2 and axes==(0,1):
-        return np.flipud(np.fliplr(img.copy()))
+        img = np.flipud(img) if ud else img
+        img = np.fliplr(img) if lr else img
     elif img.ndim == 2 and axes != (0,1):
         raise ValueError("axes of 2d array have to equal (0,1)")
     else:
-        axes = list(axes)
-        full_axes = list(range(0, img.ndim))
         transpose_axes = [item for item in full_axes if item not in axes] + axes
         unwrap_axes = [transpose_axes.index(item) for item in full_axes]
-        tmp_img = np.transpose(img.copy(), transpose_axes)
-        tmp_shape = tmp_img.shape
-        tmp_img = np.reshape(tmp_img, (np.prod(tmp_img.shape[:-2]),) + tmp_img.shape[-2:])
-        for i in range(tmp_img.shape[0]):
-            tmp_img[i] = np.flipud(np.fliplr(tmp_img[i]))
-        tmp_img = np.reshape(tmp_img, tmp_shape)
-        flipped_img = np.transpose(tmp_img, unwrap_axes)
-        return flipped_img
+        img = np.transpose(img.copy(), transpose_axes)
+        img_shape_transpose = img.shape
+        img = np.reshape(img, (np.prod(img.shape[:-2]),) + img.shape[-2:])
+        for i in range(img.shape[0]):
+            img[i] = np.flipud(img[i]) if ud else img[i]
+            img[i] = np.fliplr(img[i]) if lr else img[i]
+        img = np.reshape(img, img_shape_transpose)
+        img = np.transpose(img.copy(), unwrap_axes)
+    return img

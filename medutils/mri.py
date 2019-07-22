@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 
 plt.close('all')
 
+DICOM_OFFSET = 0
+
 def rss(img, coil_axis=-1):
     """ Compute root-sum-of-squares reconstruction
     :param img: input image (np.array)
@@ -19,40 +21,60 @@ def rss(img, coil_axis=-1):
     """
     return np.sqrt(np.sum(np.abs(img)**2, coil_axis))
 
-def fft2c(img, axes=(0, 1)):
+def fft2c(img, axes=(-2, -1)):
     """ Compute centered and scaled fft2
     :param img: input image (np.array)
     :param axes: tuple of axes over which the fft2 is computed
     :return: centered and scaled fft2
     """
     assert len(axes) == 2
+    axes = list(axes)
+    full_axes = list(range(0, img.ndim))
+    axes[0] = full_axes[axes[0]]
+    axes[1] = full_axes[axes[1]]
+    
     return np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(img, axes=axes), axes=axes), axes=axes) / np.sqrt(img.shape[axes[0]]*img.shape[axes[1]])
 
-def ifft2c(img, axes=(0, 1)):
+def ifft2c(img, axes=(-2, -1)):
     """ Compute centered and scaled ifft2
     :param img: input image (np.array)
     :param axes: tuple of axes over which the ifft2 is computed
     :return: centered and scaled ifft2
     """
     assert len(axes) == 2
+    axes = list(axes)
+    full_axes = list(range(0, img.ndim))
+    axes[0] = full_axes[axes[0]]
+    axes[1] = full_axes[axes[1]]
+
     return np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(img, axes=axes), axes=axes), axes=axes) * np.sqrt(img.shape[axes[0]]*img.shape[axes[1]])
 
-def fft2(img, axes=(0, 1)):
+def fft2(img, axes=(-2, -1)):
     """ Compute scaled fft2
     :param img: input image (np.array)
     :param axes: tuple of axes over which the fft2 is computed
     :return: centered and scaled fft2
     """
     assert len(axes) == 2
+    axes = list(axes)
+    full_axes = list(range(0, img.ndim))
+    axes[0] = full_axes[axes[0]]
+    axes[1] = full_axes[axes[1]]
+
     return np.fft.fft2(img, axes=axes) / np.sqrt(img.shape[axes[0]]*img.shape[axes[1]])
 
-def ifft2(img, axes=(0, 1)):
+def ifft2(img, axes=(-2, -1)):
     """ Compute scaled ifft2
     :param img: input image (np.array)
     :param axes: tuple of axes over which the ifft2 is computed
     :return: centered and scaled ifft2
     """
     assert len(axes) == 2
+    axes = list(axes)
+    full_axes = list(range(0, img.ndim))
+    axes[0] = full_axes[axes[0]]
+    axes[1] = full_axes[axes[1]]
+
     return np.fft.ifft2(img, axes=axes) * np.sqrt(img.shape[axes[0]]*img.shape[axes[1]])
 
 def mriAdjointOp(kspace, smaps, mask):
@@ -118,7 +140,7 @@ def estimateIntensityNormalization(img):
     # return median of highest 10% intensity values
     return np.median(img_sort[-nr_values:])
 
-def removeFEOversampling(src, axes=(0, 1), dicom_offset=1):
+def removeFEOversampling(src, axes=(-2, -1), dicom_offset=DICOM_OFFSET):
     """ Remove frequency encoding (FE) oversampling.
         This is implemented such that they match with the DICOM knee images.
     :param src: input image (np.array)
@@ -126,14 +148,20 @@ def removeFEOversampling(src, axes=(0, 1), dicom_offset=1):
     :param dicom_offset: y-offset to match the final DICOM images.
     :return: image where the FE is removed
     """
+    assert len(axes)==2
+    axes = list(axes)
+    full_axes = list(range(0, src.ndim))
+    axes[0] = full_axes[axes[0]]
+    axes[1] = full_axes[axes[1]]
+
     assert src.ndim >= 2
     nFE, nPE = src.shape[axes[0]:axes[1]+1]
-    if nPE != nFE:
+    if nFE > nPE:
         return np.take(src, np.arange(int(nFE*0.25)+dicom_offset, int(nFE*0.75)+dicom_offset), axis=axes[0])
     else:
         return src
 
-def removePEOversampling(src, axes=(0, 1), dicom_offset=1):
+def removePEOversampling(src, axes=(-2, -1), dicom_offset=DICOM_OFFSET):
     """ Remove phase encoding (PE) oversampling.
         This is implemented such that they match with the DICOM knee images.
     :param src: input image (np.array)
@@ -141,6 +169,12 @@ def removePEOversampling(src, axes=(0, 1), dicom_offset=1):
     :param dicom_offset: y-offset to match the final DICOM images.
     :return: image where the PE is removed
     """
+    assert len(axes)==2
+    axes = list(axes)
+    full_axes = list(range(0, src.ndim))
+    axes[0] = full_axes[axes[0]]
+    axes[1] = full_axes[axes[1]]
+
     assert src.ndim >= 2
     nFE, nPE = src.shape[axes[0]:axes[1]+1]
     PE_OS_crop = (nPE - nFE) / 2
@@ -150,7 +184,7 @@ def removePEOversampling(src, axes=(0, 1), dicom_offset=1):
     else:
         return np.take(src, np.arange(int(PE_OS_crop)+dicom_offset, nPE-int(PE_OS_crop)+dicom_offset), axis=axes[1])
 
-def postprocess(src, axes=(0, 1), dicom_offset=1):
+def postprocess(src, axes=(-2, -1), dicom_offset=DICOM_OFFSET):
     """ Postprocess image.
         Remove frequency encoding (FE) oversampling and phase encoding (PE) oversampling.
         This is implemented such that they match with the DICOM knee images.
@@ -159,7 +193,13 @@ def postprocess(src, axes=(0, 1), dicom_offset=1):
     :param dicom_offset: y-offset to match the final DICOM images.
     :return: image where the FE and PE is removed
     """
-    return removePEOversampling(removeFEOversampling(src, axes, dicom_offset=1), axes, dicom_offset=1)
+    assert len(axes)==2
+    axes = list(axes)
+    full_axes = list(range(0, src.ndim))
+    axes[0] = full_axes[axes[0]]
+    axes[1] = full_axes[axes[1]]
+
+    return removePEOversampling(removeFEOversampling(src, axes, dicom_offset=dicom_offset), axes, dicom_offset=dicom_offset)
 
 def generateRadialTrajectory(Nread, Nspokes=1, kmax=0.5):
     """ Generate a radial trajectory
