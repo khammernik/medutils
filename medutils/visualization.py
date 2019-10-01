@@ -12,6 +12,29 @@ import scipy.signal
 import imageio
 import os
 
+
+def center_crop(data, shape):
+    """
+    [source] https://github.com/facebookresearch/fastMRI/blob/master/data/transforms.py
+    Apply a center crop to the input real image or batch of real images.
+
+    Args:
+        data (torch.Tensor): The input tensor to be center cropped. It should have at
+            least 2 dimensions and the cropping is applied along the last two dimensions.
+        shape (int, int): The output shape. The shape should be smaller than the
+            corresponding dimensions of data.
+
+    Returns:
+        torch.Tensor: The center cropped image
+    """
+    assert 0 < shape[0] <= data.shape[-2]
+    assert 0 < shape[1] <= data.shape[-1]
+    w_from = (data.shape[-2] - shape[0]) // 2
+    h_from = (data.shape[-1] - shape[1]) // 2
+    w_to = w_from + shape[0]
+    h_to = h_from + shape[1]
+    return data[..., w_from:w_to, h_from:h_to]
+
 def kshow(kspace, title="", offset=1e-4):
     """ Show k-space
     :param kspace: input k-space (np.array)
@@ -274,10 +297,10 @@ def flip(img, axes=(-2, -1), ud=True, lr=True):
     axes[0] = full_axes[axes[0]]
     axes[1] = full_axes[axes[1]]
 
-    if img.ndim == 2 and axes==(0,1):
+    if img.ndim == 2 and axes==[0,1]:
         img = np.flipud(img) if ud else img
         img = np.fliplr(img) if lr else img
-    elif img.ndim == 2 and axes != (0,1):
+    elif img.ndim == 2:
         raise ValueError("axes of 2d array have to equal (0,1)")
     else:
         transpose_axes = [item for item in full_axes if item not in axes] + axes

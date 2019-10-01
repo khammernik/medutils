@@ -104,7 +104,7 @@ def mriForwardOp(img, smaps, mask, fft_axes=(-2,-1), soft_sense_dim=None):
     assert img.ndim <= smaps.ndim
     kspace = fft2c(smaps * img, axes=fft_axes)*mask
     if soft_sense_dim != None:
-        return np.sum(kspace, axis=soft_sense_dim)
+        return np.sum(kspace, axis=soft_sense_dim, keepdims=True)
 
 def mriAdjointOpNoShift(kspace, smaps, mask, fft_axes=(-2,-1), coil_axis=-3):
     """ Compute Cartesian MRI adjoint operation (2D) without (i)fftshifts
@@ -133,7 +133,7 @@ def mriForwardOpNoShift(img, smaps, mask, fft_axes=(-2,-1), soft_sense_dim=None)
     assert img.ndim <= smaps.ndim
     kspace = fft2(smaps * img, axes=fft_axes)*mask
     if soft_sense_dim != None:
-        return np.sum(kspace, axis=soft_sense_dim)
+        return np.sum(kspace, axis=soft_sense_dim, keepdims=True)
 
 def estimateIntensityNormalization(img):
     """ Estimate intensity normalization based on the maximum values in the image.
