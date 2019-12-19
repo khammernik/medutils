@@ -19,13 +19,13 @@ def center_crop(data, shape):
     Apply a center crop to the input real image or batch of real images.
 
     Args:
-        data (torch.Tensor): The input tensor to be center cropped. It should have at
+        data (numpy.array): The input tensor to be center cropped. It should have at
             least 2 dimensions and the cropping is applied along the last two dimensions.
         shape (int, int): The output shape. The shape should be smaller than the
             corresponding dimensions of data.
 
     Returns:
-        torch.Tensor: The center cropped image
+        numpy.array: The center cropped image
     """
     assert 0 < shape[0] <= data.shape[-2]
     assert 0 < shape[1] <= data.shape[-1]
@@ -63,7 +63,7 @@ def ksave(kspace, filepath, offset=1e-4):
     img = np.abs(kspace)
     img /= np.max(img)
     img = np.log(img + offset)
-    scipy.misc.imsave(filepath, (normalize(img)).astype(np.uint8))
+    imageio.imwrite(filepath, (normalize(img)).astype(np.uint8))
 
 def imshow(img, title=""):
     """ Show (magnitude) image in grayscale
@@ -314,3 +314,35 @@ def flip(img, axes=(-2, -1), ud=True, lr=True):
         img = np.reshape(img, img_shape_transpose)
         img = np.transpose(img.copy(), unwrap_axes)
     return img
+
+def plot_array(img, axes=(-2, -1), M=None, N=None):
+    # assert len(axes)==2
+    # axes = list(axes)
+    # full_axes = list(range(0, img.ndim))
+    # axes[0] = full_axes[axes[0]]
+    # axes[1] = full_axes[axes[1]]
+
+    # transpose_axes = [item for item in full_axes if item not in axes] + axes
+    # unwrap_axes = [transpose_axes.index(item) for item in full_axes]
+    # img = np.transpose(img.copy(), transpose_axes)
+    # img_shape_transpose = img.shape
+    # img = np.reshape(img, (np.prod(img.shape[:-2]),) + img.shape[-2:])
+    
+    assert img.ndim == 3
+
+    ksz_N = img.shape[-1]
+    ksz_M = img.shape[-2]
+
+    if M is None or N is None:
+        M = int(np.floor(np.sqrt(img.shape[0])))
+        N = int(np.ceil(img.shape[0] / M))
+    else:
+        assert M * N == img.shape[0]
+    
+    arr = np.zeros((M*ksz_M, N*ksz_N), dtype=img.dtype)
+    for i in range(img.shape[0]):
+        ii = np.mod(i, M)
+        jj = i // M
+        arr[ii*ksz_M:ii*ksz_M + ksz_M, jj*ksz_N:jj*ksz_N+ksz_N] = img[i]
+
+    return arr
