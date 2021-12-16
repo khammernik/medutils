@@ -136,6 +136,8 @@ def mriForwardOpNoShift(img, smaps, mask, fft_axes=(-2,-1), soft_sense_dim=None)
     kspace = fft2(smaps * img, axes=fft_axes)*mask
     if soft_sense_dim != None:
         return np.sum(kspace, axis=soft_sense_dim, keepdims=True)
+    else:
+        return kspace
 
 def estimateIntensityNormalization(img):
     """ Estimate intensity normalization based on the maximum values in the image.
