@@ -8,6 +8,7 @@ https://www.tugraz.at/institute/icg/research/team-pock/
 
 import numpy as np
 import skimage.measure as sm
+from skimage.metrics import structural_similarity as compare_ssim
 
 def nrmse(img, ref, axes = (0,1)):
     """ Compute the normalized root mean squared error (nrmse)
@@ -119,7 +120,7 @@ def ssim(img, ref, dynamic_range=None, axes=(0,1)):
             drange = np.max(ref_abs[i]) - np.min(ref_abs[i])
         else:
             drange = dynamic_range
-        _, ssim_i = sm.compare_ssim(img_abs[i], ref_abs[i],
+        _, ssim_i = compare_ssim(img_abs[i], ref_abs[i],
                                  data_range=drange,
                                  gaussian_weights=True,
                                  use_sample_covariance=False,
