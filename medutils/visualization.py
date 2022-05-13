@@ -35,7 +35,7 @@ def center_crop(data, shape):
     h_to = h_from + shape[1]
     return data[..., w_from:w_to, h_from:h_to]
 
-def kshow(kspace, title="", offset=1e-4):
+def kshow(kspace, title="", offset=1e-4, figsize=None):
     """ Show k-space
     :param kspace: input k-space (np.array)
     :param title: plot title
@@ -44,7 +44,7 @@ def kshow(kspace, title="", offset=1e-4):
     img = np.abs(kspace)
     img /= np.max(img)
     img = np.log(img + offset)
-    plt.figure()
+    plt.figure(figsize=figsize)
     plt.imshow(img, cmap='gray', interpolation='nearest')
     plt.axis('off')
     plt.title(title)
@@ -65,7 +65,7 @@ def ksave(kspace, filepath, offset=1e-4):
     img = np.log(img + offset)
     imageio.imwrite(filepath, (normalize(img)).astype(np.uint8))
 
-def imshow(img, title=""):
+def imshow(img, title="", figsize=None):
     """ Show (magnitude) image in grayscale
     :param img: input image (np.array)
     :param title: plot title
@@ -74,7 +74,7 @@ def imshow(img, title=""):
         #print('img is complex! Take absolute value.')
         img = np.abs(img)
 
-    plt.figure()
+    plt.figure(figsize=figsize)
     plt.imshow(img, cmap='gray', interpolation='nearest')
     plt.axis('off')
     plt.title(title)
