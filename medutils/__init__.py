@@ -10,6 +10,10 @@ from . import measures
 from . import mri
 from . import io
 from . import optimization
+try:
+    from . import optimization_th
+except:
+    print(Warning("medutils.optimization_th is only available if pytorch installed."))
 from . import visualization
 from . import complex
 
