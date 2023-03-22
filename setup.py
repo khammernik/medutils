@@ -7,7 +7,7 @@ with open(os.path.join(os.path.dirname(__file__), 'README.md')) as f:
     readme = f.read()
 
 setup(name='medutils-mri',
-  version='0.1.0',
+  version='0.1.1',
   description='Utils for medical image processing and reconstruction',
   long_description=readme,
   author='Kerstin Hammernik',
