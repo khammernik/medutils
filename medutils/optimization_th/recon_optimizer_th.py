@@ -14,6 +14,7 @@ from ..optimization.stepsize import adapt_stepsize
 import tqdm
 import torch
 import numpy as np
+from functools import partial
 
 class TVReconOptimizer(BaseReconOptimizer):
     """ Total Variation
@@ -24,14 +25,14 @@ class TVReconOptimizer(BaseReconOptimizer):
     """
     def solve(self, y, max_iter):
         # setup operators
-        K = Nabla(self.mode, self.beta)
-        KT = NablaT(self.mode, self.beta)
+        K = Nabla(self.mode, self.beta) if self.K is None else partial(self.K, mode=self.mode, beta=self.beta)
+        KT = NablaT(self.mode, self.beta) if self.KT is None else partial(self.KT, mode=self.mode, beta=self.beta)
 
         A = self.A
         AH = self.AH
 
         # setup constants
-        L = K.L
+        L = Nabla(self.mode, self.beta).L         # ToDo: Adjust to input K
         if self.tau != None:
             tau = self.tau
         else:
@@ -86,7 +87,7 @@ class TGVReconOptimizer(BaseReconOptimizer):
         self.alpha1 = alpha1
 
     def solve(self, y, max_iter):
-        # setup operators
+        # setup operator # ToDo: Adapt to custom operators
         K = Nabla(self.mode, self.beta)
         KT = NablaT(self.mode, self.beta)
         E = NablaSym(self.mode, self.beta)
@@ -168,11 +169,11 @@ class ICTVReconOptimizer(BaseReconOptimizer):
         self.beta2 = beta2
         
     def solve(self, y, max_iter):
-        # setup operators
-        K_beta1 = Nabla(self.mode, self.beta1)
-        KT_beta1 = NablaT(self.mode, self.beta1)
-        K_beta2 = Nabla(self.mode, self.beta2)
-        KT_beta2 = NablaT(self.mode, self.beta2)
+        # setup operators # ToDo: Adapt to custom operators
+        K_beta1 = Nabla(self.mode, self.beta1) if self.K is None else partial(self.K, mode=self.mode, beta=self.beta1)
+        KT_beta1 = NablaT(self.mode, self.beta1) if self.KT is None else partial(self.KT, mode=self.mode, beta=self.beta1)
+        K_beta2 = Nabla(self.mode, self.beta2) if self.K is None else partial(self.KT, mode=self.mode, beta=self.beta2)
+        KT_beta2 = NablaT(self.mode, self.beta2) if self.KT is None else partial(self.KT, mode=self.mode, beta=self.beta2)
 
         A = self.A
         AH = self.AH
@@ -266,7 +267,7 @@ class ICTGVReconOptimizer(BaseReconOptimizer):
         self.beta2 = beta2
 
     def solve(self, y, max_iter):
-        # setup operators
+        # setup operators # ToDo: Adapt to custom operators
         K_beta1 = Nabla(self.mode, self.beta1)
         KT_beta1 = NablaT(self.mode, self.beta1)
         E_beta1 = NablaSym(self.mode, self.beta1)

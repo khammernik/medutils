@@ -29,7 +29,13 @@ class BaseOptimizer(object):
         raise NotImplementedError
 
 class BaseReconOptimizer(BaseOptimizer):
-    def __init__(self, A, AH, mode, lambd, beta=None, tau=None):
+    def __init__(self, A, AH, mode, lambd, K=None, KT=None, beta=None, tau=None):
+        '''
+        :param K: expected to be a lamdba function, e.g. K = lambda x, beta, mode: Nabla(mode=mode, beta=beta).forward(x)
+        :param KT: expected to be a lamdba function, e.g. KT = lambda x, beta, mode: NablaT(mode=mode, beta=beta).forward(x)
+        '''
         self.A = A
         self.AH = AH
+        self.K = K
+        self.KT = KT
         super().__init__(mode, lambd, beta, tau)
